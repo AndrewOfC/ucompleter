@@ -2,26 +2,41 @@ use std::io::{Error, Write};
 use yaml_rust::Yaml;
 use regex::Regex;
 
+const  WHOLE_MATCH: usize = 0 ;
+const KEY_MATCH: usize = 1 ; 
+const PERIOD_MATCH: usize = 2 ;
+const INDEX_MATCH: usize = 3 ;
+const ARRAY_MATCH: usize = 4;
+
 pub fn write_completions<W: Write>(writer: &mut W, inputtree: &Yaml, inputpath: &str) -> std::io::Result<()>
 {
     let mut current = inputtree;
-    let re = Regex::new(r"([^\.\[\]]+)(?:(?:\[(\d+)\])|(\[$))?").unwrap();
+    let re = Regex::new(r"([^\.\[\]]+)(\.)?|(?:(?:\[(\d+)\])|(\[$))?").unwrap();
     let mut path = String::from("") ;
     let mut path_separator = String::from(""); // initially empty for root path
 
-    for matches in re.captures_iter(inputpath) {
-        if matches.get(3).is_some() {
-            if let Yaml::Array(_) = current {
-                return Err(Error::new(std::io::ErrorKind::Other, "illegal input"));
+    for captures in re.captures_iter(inputpath) {
+        if captures.get(ARRAY_MATCH).is_some() {
+            if !matches!(current, Yaml::Array(_)) {
+                panic!("Attempting to use array index on non-array node");
             }
             break;  
+        }
+        let m0 = captures.get(WHOLE_MATCH).unwrap();
+        if m0.start() == 0 && m0.end() == 0 {
+            continue;
         }
 
         match current {
             Yaml::Hash(map) => {
-                let m1 = matches.get(1).unwrap();
+                let m1 = captures.get(KEY_MATCH).unwrap();
                 let key = &inputpath[m1.start() .. m1.end()] ;
                 let ykey = Yaml::String(key.to_string());
+                if captures.get(PERIOD_MATCH).is_some() {
+                    current = map.get(&ykey).unwrap();
+                    path = format!("{}{}.", path, key);
+                    continue ;
+                }
                 let current_components = crate::keys_starting_with(key, map) ;
                 if current_components.len() == 1 {
                     if !map.contains_key(&ykey) {
@@ -37,15 +52,16 @@ pub fn write_completions<W: Write>(writer: &mut W, inputtree: &Yaml, inputpath: 
                 }
                 
                 for candidate in current_components {
-                    writer.write_fmt(format_args!("{}\n", candidate))? ;
+                    writer.write_fmt(format_args!("{}{}\n", path, candidate))? ;
                 }
                 return Ok(()) ;
             }
             Yaml::Array(arr) => {
-                if !matches.get(2).is_some() {
+                if !captures.get(INDEX_MATCH).is_some() {
                     return Err(Error::new(std::io::ErrorKind::Other, "illegal input no index for array")); // nothing to be done
                 }
-                let index = matches.get(2).unwrap().as_str().parse::<usize>().unwrap();
+                let index = captures.get(INDEX_MATCH).unwrap().as_str().parse::<usize>().unwrap();
+                path = format!("{}[{}]", path, index);
                 current = &arr[index];
                 continue;
             }
@@ -69,7 +85,7 @@ pub fn write_completions<W: Write>(writer: &mut W, inputtree: &Yaml, inputpath: 
                 writer.write_fmt(format_args!("{}[{}]\n", path, index))?;
             }
         }
-        _ => { return Ok(()); }
+        _ => { writer.write_fmt(format_args!("{}\n", path))? ;  }
     }
 
     Ok(())

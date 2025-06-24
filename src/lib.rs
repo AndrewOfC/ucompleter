@@ -1,6 +1,7 @@
 use yaml_rust::yaml::Hash;
 mod unittests;
 pub mod write_completions;
+mod strwriter;
 
 pub fn keys_starting_with<'a>(prefix : &str, map : &'a Hash) -> Vec<&'a str> {
     let mut keys = Vec::new();
