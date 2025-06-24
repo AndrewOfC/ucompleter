@@ -1,0 +1,30 @@
+
+meta-data:
+    root: "level1"
+
+level1:
+  level2:
+    - "one"
+    - "two"
+  level2a: "foo"
+  level2b:
+      level2b3: "fast"
+    
+level1b: "bar"
+
+level1c:
+  level2ca: 0
+  level2cb: "foo"
+    
+xlevel:
+    level1: foo
+    level1a: foo
+ulevel:
+    level1:
+        level2:
+            level3: foo
+            
+array:
+  - "a"
+  - "b"
+  - "c"
