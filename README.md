@@ -4,9 +4,15 @@ A tool for creating bash/zsh completions
 
 # bash
 
+```
+complete -o bashdefault -o default -o nospace -C ucompleter dumper
+```
+
+Will look for a dumper.yaml file within directories specified by UCOMPLETER_PATH
+
 # zsh
 
-# Environtment vars
+# Environment vars
 
 |   Var          | Effect                                                                                    |
 |----------------|-------------------------------------------------------------------------------------------|
