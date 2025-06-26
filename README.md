@@ -16,6 +16,28 @@ Will look for a dumper.yaml file within directories specified by UCOMPLETER_PATH
 
 |   Var          | Effect                                                                                    |
 |----------------|-------------------------------------------------------------------------------------------|
-| UCOMPLETER_PATH| Paths to search for configurations.  Colon Separated.  Default: .:$HOME/.config/ucompleter|
-|                |                                                    
+| UCOMPLETER_PATH| Paths to search for configurations.  Colon Separated.  Default: .:$HOME/.config/ucompleter|                                                    
 
+# meta-data
+
+If a 'meta-data' key is found at the top level of a configuration file, it will be used to effect the completion.
+
+| key      | purpose                                                                                                     |
+|----------|-------------------------------------------------------------------------------------------------------------|
+| root     | completions will be taken from the hash specified by this key. If not specified, the whole document is used |      
+| terminus | finding this key in a hash will signal that the terminal completion has been reached.                       |
+
+## Example
+
+```yaml
+meta-data:
+  root: registers
+  terminus: offset
+
+registers:
+  Peripherals:
+    GPIO:
+      - description: GPIO pin
+        offset: 0x0000
+```
+Completion will go 

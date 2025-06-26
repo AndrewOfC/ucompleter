@@ -1,3 +1,11 @@
+//! This module provides metadata retrieval and writing functionalities for processing YAML documents.
+//!
+//! The main functions in this module are:
+//!
+//! - `get_metadata`
+//! - `write_completions`
+
+use std::f32::consts::E;
 use std::io::{Error, Write};
 use yaml_rust::Yaml;
 use regex::Regex;
@@ -9,35 +17,31 @@ const PERIOD_MATCH: usize = 2 ;
 const INDEX_MATCH: usize = 3 ;
 const ARRAY_MATCH: usize = 4;
 
-fn get_metadata(tree: &Hash) -> (&Hash, Yaml) {
-    let metakey = Yaml::String("meta-data".to_string());
+
+fn get_metadata(tree: &Yaml) -> (&Yaml, Yaml) {
+    let metakey = Yaml::String("metadata".to_string());
     let rootkey = Yaml::String("root".to_string());
     let terminuskey = Yaml::String("terminus".to_string());
     let mut terminus = Yaml::String("".to_string());
     
-    let Yaml::Hash(meta) = tree.get(&metakey).unwrap() else { return (tree, terminus) };
-    if meta.contains_key(&terminuskey) {
-        //terminus = meta.get_mut(&terminuskey).unwrap().to_owned();
-    }
-    
-    
-    let Yaml::Hash(root) = meta.get(&rootkey).unwrap() else { return (tree, terminus) };
-    
-    return (root, terminus) ;
+    let Yaml::Hash(hash) = tree else { return (tree, terminus) };
+    let Yaml::Hash(meta) = hash.get(&metakey).unwrap_or(&Yaml::Hash(Hash::new())) else { return (tree, terminus) };
+
+    let root = meta.get(&rootkey).unwrap_or(tree);
+    terminus = meta.get(&terminuskey).unwrap_or(&terminus).clone();
+
+    (root, terminus)
 }
 
-pub fn write_completions<W: Write>(writer: &mut W, inputtree: &Yaml, inputpath: &str) -> std::io::Result<()>
+pub fn write_completions<W: Write>(writer: &mut W, inputyaml: &Yaml, inputpath: &str) -> std::io::Result<()>
 {
-    let mut current = inputtree;
     let re = Regex::new(r"([^\.\[\]]+)(\.)?|(?:(?:\[(\d+)\])|(\[$))?").unwrap();
     let mut path = String::from("") ;
     let mut path_separator = String::from(""); // initially empty for root path
 
-    if let Yaml::Hash(hash) = inputtree {
-        get_metadata(hash);
-    }
-
-
+    let Yaml::Hash(itree) = inputyaml else { panic!("Completion root must be a hash"); } ;
+    let (mut current, terminus) = get_metadata(inputyaml);
+    
     for captures in re.captures_iter(inputpath) {
         if captures.get(ARRAY_MATCH).is_some() {
             if !matches!(current, Yaml::Array(_)) {
