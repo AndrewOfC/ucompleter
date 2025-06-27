@@ -1,6 +1,9 @@
 
 completion-metadata:
     root: "dataroot"
+    previous:
+      "-f":
+        action: "reload"
 
 dataroot:
   level1:

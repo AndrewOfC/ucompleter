@@ -5,11 +5,9 @@
 //! - `get_metadata`
 //! - `write_completions`
 
-use std::f32::consts::E;
+use regex::Regex;
 use std::io::{Error, Write};
 use yaml_rust::Yaml;
-use regex::Regex;
-use yaml_rust::yaml::Hash;
 
 const  WHOLE_MATCH: usize = 0 ;
 const KEY_MATCH: usize = 1 ; 
@@ -30,8 +28,8 @@ fn get_metadata(tree: &Yaml) -> (&Yaml, Yaml) {
     }
     let &Yaml::Hash(meta) = &hash.get(&metakey).unwrap() else { panic!("Metadata must be a hash"); };
 
-    let rootkey = meta.get(&rootkeykey).unwrap() else { panic!("Metadata root key must be a string"); };
-    let root = hash.get(rootkey).unwrap() else { panic!("root '{:?}' not found", rootkey); };
+    let rootkey = meta.get(&rootkeykey).expect("Metadata root key must be a string");
+    let root = hash.get(rootkey).expect(format!("root '{:?}' not found", rootkey).as_str()) ;
     
     terminus = meta.get(&terminuskey).unwrap_or(&terminus).clone();
 
@@ -44,7 +42,6 @@ pub fn write_completions<W: Write>(writer: &mut W, inputyaml: &Yaml, inputpath: 
     let mut path = String::from("") ;
     let mut path_separator = String::from(""); // initially empty for root path
 
-    let Yaml::Hash(itree) = inputyaml else { panic!("Completion root must be a hash"); } ;
     let (mut current, terminus) = get_metadata(inputyaml);
     
     for captures in re.captures_iter(inputpath) {
