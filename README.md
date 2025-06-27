@@ -18,9 +18,9 @@ Will look for a dumper.yaml file within directories specified by UCOMPLETER_PATH
 |----------------|-------------------------------------------------------------------------------------------|
 | UCOMPLETER_PATH| Paths to search for configurations.  Colon Separated.  Default: .:$HOME/.config/ucompleter|                                                    
 
-# meta-data
+# completion-metadata
 
-If a 'meta-data' key is found at the top level of a configuration file, it will be used to effect the completion.
+If a 'completion-metadata' key is found at the top level of a configuration file, it will be used to effect the completion.
 
 | key      | purpose                                                                                                     |
 |----------|-------------------------------------------------------------------------------------------------------------|
@@ -30,14 +30,14 @@ If a 'meta-data' key is found at the top level of a configuration file, it will 
 ## Example
 
 ```yaml
-meta-data:
+completion-metadata:
   root: registers
   terminus: offset
 
 registers:
   Peripherals:
-    GPIO:
+    GPIO1:
       - description: GPIO pin
         offset: 0x0000
 ```
-Completion will go 
+Completion will go down as far as Peripherals.GPIO1 
