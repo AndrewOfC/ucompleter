@@ -19,15 +19,20 @@ const ARRAY_MATCH: usize = 4;
 
 
 fn get_metadata(tree: &Yaml) -> (&Yaml, Yaml) {
-    let metakey = Yaml::String("metadata".to_string());
-    let rootkey = Yaml::String("root".to_string());
+    let metakey = Yaml::String("completion-metadata".to_string());
+    let rootkeykey = Yaml::String("root".to_string());
     let terminuskey = Yaml::String("terminus".to_string());
     let mut terminus = Yaml::String("".to_string());
     
     let Yaml::Hash(hash) = tree else { return (tree, terminus) };
-    let Yaml::Hash(meta) = hash.get(&metakey).unwrap_or(&Yaml::Hash(Hash::new())) else { return (tree, terminus) };
+    if !hash.contains_key(&metakey) {
+        return (tree, terminus);
+    }
+    let &Yaml::Hash(meta) = &hash.get(&metakey).unwrap() else { panic!("Metadata must be a hash"); };
 
-    let root = meta.get(&rootkey).unwrap_or(tree);
+    let rootkey = meta.get(&rootkeykey).unwrap() else { panic!("Metadata root key must be a string"); };
+    let root = hash.get(rootkey).unwrap() else { panic!("root '{:?}' not found", rootkey); };
+    
     terminus = meta.get(&terminuskey).unwrap_or(&terminus).clone();
 
     (root, terminus)

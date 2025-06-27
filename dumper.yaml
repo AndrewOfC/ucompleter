@@ -1,8 +1,8 @@
 
-metadata:
-    root: "root"
+completion-metadata:
+    root: "dataroot"
 
-root:
+dataroot:
   level1:
     level2:
       - "one"
