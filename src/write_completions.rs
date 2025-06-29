@@ -10,7 +10,7 @@ use std::io::{Error, Write};
 use yaml_rust::Yaml;
 
 const  WHOLE_MATCH: usize = 0 ;
-const KEY_MATCH: usize = 1 ; 
+const KEY_MATCH: usize = 1 ;
 const PERIOD_MATCH: usize = 2 ;
 const INDEX_MATCH: usize = 3 ;
 const ARRAY_MATCH: usize = 4;
@@ -75,6 +75,11 @@ pub fn write_completions<W: Write>(writer: &mut W, inputyaml: &Yaml, inputpath: 
                         break ;
                     }
                     current = map.get(&ykey).unwrap();
+                    if let Yaml::Hash(current_map) = current {
+                        if current_map.contains_key(&terminus) {
+                            return Ok(());
+                        }
+                    }
                     path = format!("{}{}{}", path, path_separator, key);
                     path_separator = String::from(".") ;
                     continue ;
