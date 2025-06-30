@@ -4,10 +4,10 @@ use std::io::{BufReader, Read};
 use yaml_rust::{YamlLoader};
 use ucompleter::write_completions;
 
-fn find_config_file(arg0: &str) -> String {
+fn find_config_file(arg0: &str, env_var: &str) -> String {
     let home = env::var("HOME").unwrap_or("".to_string());
     let default_path = format!(".:{}/.config/ucompleter", home);
-    let path = env::var("UCOMPLETER_PATH").unwrap_or(default_path);
+    let path = env::var(env_var).unwrap_or(default_path);
     let paths: Vec<&str> = path.split(':').collect();
     let target = format!("{}.yaml", arg0) ;
     
@@ -23,7 +23,7 @@ fn find_config_file(arg0: &str) -> String {
 
 fn main() {
     let argv: Vec<String> = env::args().collect();
-    let config_path = find_config_file(&argv[1]);
+    let config_path = find_config_file(&argv[1], "UCOMPLETER_PATH");
 
     let mut contents = String::new();
     let file = File::open(config_path).expect("Unable to open the file");
