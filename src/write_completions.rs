@@ -38,7 +38,7 @@ fn get_metadata(tree: &Yaml) -> (&Yaml, Yaml) {
 
 pub fn write_completions<W: Write>(writer: &mut W, inputyaml: &Yaml, inputpath: &str) -> std::io::Result<()>
 {
-    let re = Regex::new(r"([^\.\[\]]+)(\.)?|(?:(?:\[(\d+)\])|(\[$))?").unwrap();
+    let re = Regex::new(r"([^.\[\]]+)(\.)?|(?:\[(\d+)\]|(\[$))?").unwrap();
     let mut path = String::from("") ;
     let mut path_separator = String::from(""); // initially empty for root path
 

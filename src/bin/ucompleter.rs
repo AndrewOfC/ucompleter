@@ -23,7 +23,9 @@ fn find_config_file(arg0: &str, env_var: &str) -> String {
 
 fn main() {
     let argv: Vec<String> = env::args().collect();
+    
     let config_path = find_config_file(&argv[1], "UCOMPLETER_PATH");
+
 
     let mut contents = String::new();
     let file = File::open(config_path).expect("Unable to open the file");
