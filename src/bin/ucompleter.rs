@@ -22,9 +22,33 @@ fn find_config_file(arg0: &str, env_var: &str) -> String {
 
 
 fn main() {
-    let argv: Vec<String> = env::args().collect();
-    
-    let config_path = find_config_file(&argv[1], "UCOMPLETER_PATH");
+    use clap::{Arg, Command};
+
+    /*
+    println!("Command line arguments:");
+    for (index, argument) in std::env::args().enumerate() {
+        eprintln!("  [{}]: {}", index, argument);
+    }*/
+
+    let options = Command::new("ucompleter")
+        .arg(Arg::new("command")
+            .help("Command to complete")
+            .required(true))
+        .arg(Arg::new("prefix")
+            .help("Completion prefix")
+            .default_value(""))
+        .arg(Arg::new("wordbefore")
+            .help("bash word before last entry")
+            .required(false))
+        .arg(Arg::new("descriptions")
+            .short('d')
+            .long("descriptions")
+            .help("output descriptions if available")
+            .action(clap::ArgAction::SetTrue))
+        .get_matches();
+
+    let command = options.get_one::<String>("command").unwrap();
+    let config_path = find_config_file(command, format!("{}_PATH", command.to_uppercase()).as_str());
 
 
     let mut contents = String::new();
@@ -33,7 +57,11 @@ fn main() {
     buf_reader.read_to_string(&mut contents).expect("Unable to read the file");
 
     let current = &YamlLoader::load_from_str(&contents).expect("load/parse failed")[0];
-    
-    write_completions::write_completions(&mut std::io::stdout(), current, &argv[2]).expect("TODO: panic message");
-    
+
+    let prefix = options.get_one::<String>("prefix").unwrap();
+
+    write_completions::write_completions(&mut std::io::stdout(),
+                                         current,
+                                         prefix,
+                                         options.get_one::<bool>("descriptions").unwrap()).expect("TODO: panic message");
 }
