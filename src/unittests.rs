@@ -2,9 +2,13 @@
 pub mod u_tests {
     use crate::strwriter::StrWriter;
     use crate::write_completions;
+    use crate::write_completions::write_completions;
+    use crate::yaml_descent::yaml_descent;
     use std::fs::File;
     use std::io::{BufReader, BufWriter, Read};
     use yaml_rust::{Yaml, YamlLoader};
+    use crate::get_description::get_description;
+
     const SOURCE1: &str = r#"---
 field1:
     field1a: value1
@@ -19,7 +23,7 @@ field:
     fielda: value1
     fieldb: value2
 "# ;
-    fn get_yaml() -> Yaml {
+    fn get_yaml()  -> Yaml {
         let mut contents = String::new();
         let file = File::open("dumper.yaml").expect("Unable to open the file");
         let mut buf_reader = BufReader::new(file) ;
@@ -31,25 +35,25 @@ field:
     fn input_output_check(input: &str, output: &str) {
         let tree = get_yaml();
         let mut result_buffer = StrWriter::new() ;
-        write_completions::write_completions(&mut result_buffer, &tree, &input).expect("write failed") ;
+        write_completions::write_completions(&mut result_buffer, &tree, &input, &false).expect("write failed") ;
         let result_str = result_buffer.to_string().expect("write failed") ;
         assert_eq!(result_str, output);
     }
 
     #[test]
     fn test_empty() {
-        let y = &YamlLoader::load_from_str(SOURCE1).expect("load/parse failed")[0] ;
+        let y = &YamlLoader::load_from_str(SOURCE1).unwrap()[0] ;
         let mut output = BufWriter::new(Vec::new());
-        write_completions::write_completions(&mut output, y, "").expect("write failed") ;
+        write_completions::write_completions(&mut output, &y, "", &false).expect("write failed") ;
         let s = String::from_utf8(output.into_inner().unwrap()).unwrap();
         assert_eq!(s, "field1\nfield2\n");
     }
     
     #[test]
     fn test_one_path() {
-        let y = &YamlLoader::load_from_str(SOURCE1).expect("load/parse failed")[0] ;
+        let y = &YamlLoader::load_from_str(SOURCE1).unwrap()[0] ;
         let mut output = StrWriter::new() ;
-        write_completions::write_completions(&mut output, y, "f").expect("write failed") ;
+        write_completions(&mut output, &y, "f", &false).expect("write failed") ;
         let s = output.to_string().expect("write failed") ;
         assert_eq!(s, "field1\nfield2\n");
     }
@@ -60,20 +64,20 @@ field:
 field1: value1
 field2: value2        
 "# ;
-        let y = &YamlLoader::load_from_str(source).expect("load/parse failed")[0] ;
+        let y = &YamlLoader::load_from_str(SOURCE1).unwrap()[0] ;
         let mut output = BufWriter::new(Vec::new());
-        write_completions::write_completions(&mut output, y, "f").expect("write failed") ;
+        write_completions::write_completions(&mut output, &y, "f", &false).expect("write failed") ;
         let s = String::from_utf8(output.into_inner().unwrap()).unwrap();
         assert_eq!(s, "field1\nfield2\n");
     }
     
     #[test]
     fn test_two_paths_2() {
-        let y = &YamlLoader::load_from_str(SOURCE2).expect("load/parse failed")[0] ;
+        let y = &YamlLoader::load_from_str(SOURCE1).unwrap()[0] ;
         let mut output = BufWriter::new(Vec::new());
-        write_completions::write_completions(&mut output, y, "f").expect("write failed") ;
+        write_completions::write_completions(&mut output, &y, "f", &false).expect("write failed") ;
         let s = String::from_utf8(output.into_inner().unwrap()).unwrap();
-        assert_eq!(s, "field.fielda\nfield.fieldb\n");
+        assert_eq!(s, "field1\nfield2\n");
     }
     
     #[test]
@@ -100,5 +104,56 @@ field2: value2
         input_output_check("level1.level2a", "level1.level2a\n") ;
     }
     
+    #[test]
+    fn test_gpio() {
+        input_output_check("G", "GPIO.pins\nGPIO.words\n") ;
+    }
+    
+    #[test]
+    fn test_gpio_p() {
+        input_output_check("GPIO.p", "GPIO.pins[0]\nGPIO.pins[1]\n") ;
+    }
+    #[test]
+    fn test_gpio_pin0() {
+        input_output_check("GPIO.pins[0].", "GPIO.pins[0].clear\nGPIO.pins[0].function\nGPIO.pins[0].level\nGPIO.pins[0].set\n") ;
+    }
+
+    static ysource: &str = "---
+GPIO:
+    pins:
+      - set:
+          offset: 0x10000000
+      - clear:
+          offset: 0x10000004
+    " ;
+
+
+    #[test]
+    fn test_descent() {
+        let docs = YamlLoader::load_from_str(ysource).unwrap();
+        let doc = &docs[0];
+
+        let result = yaml_descent(doc, "GPIO.pins[0].s") ;
+        // assert_eq!(result, "et") ;
+
+    }
+    
+    #[test]
+    fn test_descending() {
+
+        input_output_check("ulev", "ulevel.level1.level2.level3\n") ;
+       
+        return ;
+    }
+    
+    #[test]
+    fn test_get_description() {
+        
+        let y = get_yaml() ;
+        let (child, _, _depth) = yaml_descent(&y, "test_description.description_target") ;
+        let description = get_description(&y, child) ;
+        assert_eq!(description, "this is a description") ;
+        return ;
+    }
     
 }

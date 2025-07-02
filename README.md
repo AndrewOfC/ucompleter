@@ -11,6 +11,19 @@ complete -o bashdefault -o default -o nospace -C ucompleter dumper
 Will look for a dumper.yaml file within directories specified by UCOMPLETER_PATH
 
 # zsh
+(work in progress)
+```
+
+_register_tool() {
+    local -a args
+    args=($(_call_program current ucompleter register_tool "$words[CURRENT]"))
+    _describe 'commands' args
+    return 0
+}
+
+compdef _register_tool register_tool
+
+```
 
 # Environment vars
 
