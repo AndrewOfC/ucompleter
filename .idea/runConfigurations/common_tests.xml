@@ -1,11 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Pins" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="buildProfileId" value="dev" />
-    <option name="command" value="run --bin ucompleter -- register_tool GPIO.pins[27]." />
-    <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-    <envs>
-      <env name="REGISTER_TOOL_PATH" value="$PROJECT_DIR$/../../" />
-    </envs>
+  <configuration default="false" name="common tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="buildProfileId" value="test" />
+    <option name="command" value="test --package aep_rust_common --lib unittests::u_tests" />
+    <option name="workingDirectory" value="file://$PROJECT_DIR$/aep_rust_common" />
+    <envs />
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

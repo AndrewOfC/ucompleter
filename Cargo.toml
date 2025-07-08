@@ -3,7 +3,11 @@ name = "ucompleter"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "aep_rust_common"]
+
 [dependencies]
 yaml-rust = "0.4.5"
 regex = "1.11.1"
 clap = "4.5.40"
+aep_rust_common = { path = "aep_rust_common" }
