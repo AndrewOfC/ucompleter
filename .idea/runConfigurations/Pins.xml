@@ -1,9 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Test" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+  <configuration default="false" name="Pins" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="buildProfileId" value="dev" />
-    <option name="command" value="test test --bins" />
+    <option name="command" value="run --bin ucompleter -- register_tool GPIO.pins[0].e" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-    <envs />
+    <envs>
+      <env name="REGISTER_TOOL_PATH" value="$PROJECT_DIR$/../.." />
+    </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
