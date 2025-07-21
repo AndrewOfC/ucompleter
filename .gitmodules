@@ -1,0 +1,3 @@
+[submodule "aep_rust_common"]
+	path = aep_rust_common
+	url = git@github.com:AndrewOfC/aep_rust_common.git
