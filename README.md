@@ -91,6 +91,7 @@ Completion will go down as far as Peripherals.GPIO1[0]
 Suitable for executing on a raspberrypi4b, or ubuntu
 
 ```bash
+sudo apt-get install -y gcc-aarch64-linux-gnu # once
 rustup target add aarch64-unknown-linux-gnu # once
 cargo build 
 

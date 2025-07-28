@@ -23,8 +23,11 @@
 # 
 [package]
 name = "ucompleter"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+license-file = "LICENSE"
+description = "tool for providing command line completions from config files"
+
 
 [workspace]
 members = [".", "aep_rust_common"]
@@ -34,3 +37,8 @@ yaml-rust = "0.4.5"
 regex = "1.11.1"
 clap = "4.5.40"
 aep_rust_common = { path = "aep_rust_common" }
+
+[package.metadata.deb]
+copyright = "© copyright Andrew Ellis Page"
+extended-description-file= "README.md"
+section = "Utilities"
