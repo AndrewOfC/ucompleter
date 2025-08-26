@@ -1,6 +1,6 @@
-
-
+import os
 import re
+import sys
 
 import yaml
 
@@ -50,11 +50,9 @@ class UCompleter:
         empty_path = True
         for match in self._re.finditer(path):
             terminated = match.group(PERIOD_MATCH)
-            key = match.group(1)
+            key = match.group(1) or ""
 
             if isinstance(current, dict):
-                if key not in current:
-                    return
                 if terminated:
                     current = current[key]
                     current_path += key
@@ -64,18 +62,18 @@ class UCompleter:
                         return
                     continue
 
-            keys = self.keys_starting_with(key, current)
-            if not keys:
-                return
-            if len(keys) == 1:
-                current = current[keys[0]]
-                current_path += keys[0]
-                current_path += self.sep(current, empty_path)
-                empty_path = False
-                continue
+                keys = self.keys_starting_with(key, current)
+                if not keys:
+                    return
+                if len(keys) == 1:
+                    current = current[keys[0]]
+                    current_path += keys[0]
+                    current_path += self.sep(current, empty_path)
+                    empty_path = False
+                    continue
 
-            for key in keys:
-                strm.write(f"{current_path}{key}\n")
+                for key in keys:
+                    strm.write(f"{current_path}{key}\n")
                 return
 
             if isinstance(current, list):
@@ -88,9 +86,10 @@ class UCompleter:
                 index = match.group(INDEX_MATCH)
                 if index is None:
                     for i in range(len(current)):
-                        current_path += f"[{i}]"
                         empty_path = False
-                        strm.write(f"{current_path}\n")
+                        index_str = f"[{i}]" # todo apply array parser port
+                        current_path += self.sep(current, empty_path)
+                        strm.write(f"{current_path}{index_str}\n")
                     return
                 index = int(index, 0)
                 if index >= len(current):
@@ -106,14 +105,6 @@ class UCompleter:
         return
 
 def main():
-    import yaml
-    base = os.path.dirname(__file__)
-
-    with open(os.path.join(base, '..', 'aep_rust_common', 'test_data.yaml'), 'r') as f:
-        root = yaml.safe_load(f)
-
-
-
 
 
     return
