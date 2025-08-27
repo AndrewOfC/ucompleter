@@ -41,7 +41,7 @@ class UCompleter:
         return ''
 
     def keys_starting_with(self, key, current:dict):
-        return list(filter(lambda x: x.startswith(key), current.keys()))
+        return sorted(filter(lambda x: x.startswith(key), current.keys()))
 
     def write_completions(self, path, strm):
         completions = []
