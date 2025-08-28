@@ -56,6 +56,16 @@ class CompletionsTest(unittest.TestCase):
         self.input_output_check('G',
                                 'GPIO.pins\nGPIO.words\n')
 
+    def test_gpio_p(self):
+        self.input_output_check('GPIO.p',"GPIO.pins[0]\nGPIO.pins[1]\n")
+
+    def test_gpio_pin0(self):
+        self.input_output_check('GPIO.pins[0].',
+                                "GPIO.pins[0].clear\nGPIO.pins[0].function\nGPIO.pins[0].level\nGPIO.pins[0].set\n")
+
+    def test_descending(self):
+        self.input_output_check("ulev",
+                                "ulevel.level1.level2.level3\n")
 
 if __name__ == '__main__':
     unittest.main()

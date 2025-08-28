@@ -4,9 +4,9 @@ import sys
 
 import yaml
 
-KEY_MATCH = 1
-PERIOD_MATCH = 2
-INDEX_MATCH = 3
+KEY_MATCH = 0
+PERIOD_MATCH = 1
+INDEX_MATCH = 2
 
 class UCompleter:
     def __init__(self, root):
@@ -48,66 +48,62 @@ class UCompleter:
         current_path = ''
         current = self._root
         empty_path = True
-        for match in self._re.finditer(path):
+        matches = self._re.findall(path)
+        for i, match in enumerate(matches):
+            last = i == (len(matches) - 1)
             terminated = match.group(PERIOD_MATCH)
             key = match.group(1) or ""
-
-            if isinstance(current, dict):
-                if terminated:
-                    current = current[key]
-                    current_path += key
-                    empty_path = False
-                    current_path += self.sep(current, empty_path)
-                    if self.has_terminal_field(current):
-                        return
-                    continue
-
-                keys = self.keys_starting_with(key, current)
-                if not keys:
-                    return
-                if len(keys) == 1:
-                    current = current[keys[0]]
-                    current_path += keys[0]
-                    current_path += self.sep(current, empty_path)
-                    empty_path = False
-                    continue
-
-                for key in keys:
-                    strm.write(f"{current_path}{key}\n")
-                return
-
-            if isinstance(current, list):
-                if len(current) == 1:
-                    current_path += "[0]" # todo apply array parser port
-                    empty_path = False
-                    current = current[0]
-                    continue
-
-                index = match.group(INDEX_MATCH)
-                if index is None:
-                    for i in range(len(current)):
+            while True:
+                if isinstance(current, dict):
+                    if terminated:
+                        current = current[key]
+                        current_path += key
                         empty_path = False
-                        index_str = f"[{i}]" # todo apply array parser port
                         current_path += self.sep(current, empty_path)
-                        strm.write(f"{current_path}{index_str}\n")
+                        if not last:
+                            break
+                        key = ""
+                        terminated = False
+                        continue
+
+                    keys = self.keys_starting_with(key, current)
+                    if not keys:
+                        return
+                    if len(keys) == 1:
+                        current = current[keys[0]]
+                        current_path += keys[0]
+                        empty_path = False
+                        current_path += self.sep(current, empty_path)
+                        continue
+
+                    for key in keys:
+                        strm.write(f"{current_path}{key}\n")
                     return
-                index = int(index, 0)
-                if index >= len(current):
-                    return
-                current = current[index]
-                current_path += f"[{index}]"
-                current_path += self.sep(current, empty_path)
-                empty_path = False
-                continue
-            break # scalar, we've bottomed out
+
+                if isinstance(current, list):
+                    if len(current) == 1:
+                        current_path += "[0]" # todo apply array parser port
+                        empty_path = False
+                        current = current[0]
+                        continue
+
+                    index = match.group(INDEX_MATCH)
+                    if index is None:
+                        for i in range(len(current)):
+                            empty_path = False
+                            index_str = f"[{i}]" # todo apply array parser port
+                            current_path += self.sep(current, empty_path)
+                            strm.write(f"{current_path}{index_str}\n")
+                        return
+                    index = int(index, 0)
+                    if index >= len(current):
+                        return
+                    current = current[index]
+                    current_path += f"[{index}]"
+                    current_path += self.sep(current, empty_path)
+                    empty_path = False
+                    continue
+                break # scalar, we've bottomed out
 
 
         return
-
-def main():
-
-
-    return
-
-if __name__ == "__main__":
-    main()
