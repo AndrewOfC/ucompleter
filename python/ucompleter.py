@@ -5,8 +5,8 @@ import sys
 import yaml
 
 KEY_MATCH = 0
-PERIOD_MATCH = 1
-INDEX_MATCH = 2
+INDEX_MATCH = 1
+PERIOD_MATCH = 2
 
 class UCompleter:
     def __init__(self, root):
@@ -14,7 +14,7 @@ class UCompleter:
         :param root: dict or list from yaml or json
         """
         # todo zsh parser
-        self._re = re.compile(r"([^.\[\]\\]+)(\.)?|(?:\[(\d+)]?)?")
+        self._re = re.compile(r"(?:([^.\[\]\\]+)|(?:\[(\d+)]?))(\.)?")
 
         if isinstance(root, dict) and 'completion-metadata' in root:
             self._root = root[root['completion-metadata']['root']]
@@ -25,6 +25,31 @@ class UCompleter:
 
         return
 
+    def __getitem__(self, path):
+        """
+        Access nested elements using path string
+        :param path: String path like 'level1.level2' or 'array[0]'
+        :return: Value at the specified path
+        """
+        current = self._root
+        matches = self._re.findall(path)
+
+        for match in matches:
+            key = match[KEY_MATCH]
+            index = match[INDEX_MATCH]
+
+            if isinstance(current, dict) and key:
+                if key not in current:
+                    raise KeyError(f"Key '{key}' not found")
+                current = current[key]
+            elif isinstance(current, list) and index:
+                idx = int(index)
+                if idx >= len(current):
+                    raise IndexError(f"Index {idx} out of range")
+                current = current[idx]
+
+        return current
+
     def has_terminal_field(self, current) -> bool:
         if not isinstance(current, dict):
             return False
@@ -33,8 +58,8 @@ class UCompleter:
                 return True
         return False
 
-    def sep(self, current, empty_path):
-        if empty_path:
+    def sep(self, current, empty_path, last):
+        if empty_path or last:
             return ''
         if isinstance(current, dict):
             return '.'
@@ -51,15 +76,15 @@ class UCompleter:
         matches = self._re.findall(path)
         for i, match in enumerate(matches):
             last = i == (len(matches) - 1)
-            terminated = match.group(PERIOD_MATCH)
-            key = match.group(1) or ""
+            terminated = match[PERIOD_MATCH]
+            key = match[KEY_MATCH]
             while True:
                 if isinstance(current, dict):
                     if terminated:
                         current = current[key]
                         current_path += key
                         empty_path = False
-                        current_path += self.sep(current, empty_path)
+                        current_path += self.sep(current, empty_path, last)
                         if not last:
                             break
                         key = ""
@@ -68,17 +93,20 @@ class UCompleter:
 
                     keys = self.keys_starting_with(key, current)
                     if not keys:
-                        return
+                        return ''
                     if len(keys) == 1:
                         current = current[keys[0]]
                         current_path += keys[0]
+                        if self.has_terminal_field(current):
+                            return current_path
                         empty_path = False
-                        current_path += self.sep(current, empty_path)
-                        continue
+                        key = ''
+                        current_path += self.sep(current, empty_path, last)
+                        break
 
                     for key in keys:
                         strm.write(f"{current_path}{key}\n")
-                    return
+                    return ''
 
                 if isinstance(current, list):
                     if len(current) == 1:
@@ -87,23 +115,32 @@ class UCompleter:
                         current = current[0]
                         continue
 
-                    index = match.group(INDEX_MATCH)
-                    if index is None:
+                    index = match[INDEX_MATCH]
+                    if not index:
                         for i in range(len(current)):
                             empty_path = False
                             index_str = f"[{i}]" # todo apply array parser port
-                            current_path += self.sep(current, empty_path)
+                            current_path += self.sep(current, empty_path, last)
                             strm.write(f"{current_path}{index_str}\n")
-                        return
+                        return ''
                     index = int(index, 0)
                     if index >= len(current):
                         return
                     current = current[index]
                     current_path += f"[{index}]"
-                    current_path += self.sep(current, empty_path)
+                    current_path += self.sep(current, empty_path, last)
                     empty_path = False
-                    continue
-                break # scalar, we've bottomed out
+                    break
+                return current_path # scalar, we've bottomed out
 
+        if isinstance(current, dict):
+            if self.has_terminal_field(current):
+                return current_path
+            for key in sorted(current.keys()):
+                strm.write(f"{current_path}.{key}\n")
+            return current_path
 
-        return
+        if isinstance(current, list):
+            for i in range(len(current)):
+                strm.write(f"{current_path}[{i}]\n")
+        return current_path

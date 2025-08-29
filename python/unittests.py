@@ -19,8 +19,9 @@ class CompletionsTest(unittest.TestCase):
     def input_output_check(self, input, output):
         s = io.StringIO()
         comp = UCompleter(self._root)
-        comp.write_completions(input, s)
+        path = comp.write_completions(input, s)
         self.assertEqual(s.getvalue(), output)
+        return comp, path
 
     def test_level(self):
         self.input_output_check('level1.level2.',
@@ -64,8 +65,9 @@ class CompletionsTest(unittest.TestCase):
                                 "GPIO.pins[0].clear\nGPIO.pins[0].function\nGPIO.pins[0].level\nGPIO.pins[0].set\n")
 
     def test_descending(self):
-        self.input_output_check("ulev",
-                                "ulevel.level1.level2.level3\n")
+        comp, path = self.input_output_check("ulev",
+                                "")
+        self.assertEqual(comp[path], "foo")
 
 if __name__ == '__main__':
     unittest.main()
